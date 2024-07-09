@@ -496,11 +496,32 @@ fn get_line_for_agent_to_edge(
   if cutoff_edge_distance_squared <= left_shadow_distance_squared
     && cutoff_edge_distance_squared <= right_shadow_distance_squared
   {
-    let line_direction = -cutoff_vector.normalize();
-    Some(Line {
-      direction: line_direction,
-      point: left_cutoff + edge_margin / time_horizon * line_direction.perp(),
-    })
+    let edge_direction = cutoff_vector.normalize();
+    let velocity_direction = (agent.velocity - left_cutoff).normalize();
+
+    // Check if the velocity is nearly perpendicular to the edge
+    if velocity_direction.dot(edge_direction).abs() < 0.1 {
+      // Choose a direction that's not parallel to the edge
+      let perpendicular_direction = edge_direction.perp();
+      let new_direction =
+        if perpendicular_direction.dot(velocity_direction) > 0.0 {
+          perpendicular_direction
+        } else {
+          -perpendicular_direction
+        };
+
+      Some(Line {
+        direction: new_direction,
+        point: left_cutoff + edge_margin / time_horizon * edge_direction,
+      })
+    } else {
+      // Original behavior for non-perpendicular cases
+      let line_direction = -edge_direction;
+      Some(Line {
+        direction: line_direction,
+        point: left_cutoff + edge_margin / time_horizon * line_direction.perp(),
+      })
+    }
   } else if left_shadow_distance_squared <= right_shadow_distance_squared {
     if is_left_shadow_covered {
       None

@@ -822,3 +822,41 @@ fn collision_with_convex_vertex() {
     ]
   );
 }
+
+#[test]
+fn agent_velocity_perpendicular_to_obstacle() {
+  let agent = Agent {
+    position: Vec2::new(0.0, -2.0),
+    velocity: Vec2::new(0.0, 1.0), // Velocity perpendicular to the obstacle
+    radius: 0.5,
+    avoidance_responsibility: 1.0,
+  };
+
+  let obstacle = Obstacle::Open {
+    vertices: vec![Vec2::new(-5.0, 0.0), Vec2::new(5.0, 0.0)],
+  };
+
+  let lines = get_lines_for_agent_to_obstacle(
+    &agent,
+    &obstacle,
+    /* obstacle_margin= */ agent.radius,
+    /* time_horizon= */ 1.0,
+  );
+  println!("{:?}", lines);
+
+  assert_eq!(lines.len(), 1, "Expected one constraint line");
+
+  let line = &lines[0];
+
+  // The direction should not be parallel to the obstacle
+  assert!(
+    line.direction.dot(Vec2::new(1.0, 0.0)).abs() > 0.1,
+    "Constraint line direction should not be parallel to the obstacle"
+  );
+
+  // The direction should have a significant horizontal component
+  assert!(
+    line.direction.x.abs() > 0.5,
+    "Constraint line should have a significant horizontal component"
+  );
+}
