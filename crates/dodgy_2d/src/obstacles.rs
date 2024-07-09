@@ -499,7 +499,9 @@ fn get_line_for_agent_to_edge(
     let edge_direction = cutoff_vector.normalize();
     // If the velocity is perpendicular to the edge, the constraint should be
     // perpendicular to the edge as well.
-    if agent.velocity.dot(edge_direction).abs() < 0.11 {
+    if agent.velocity.length() > 0.0
+      && agent.velocity.dot(edge_direction).abs() < 0.11
+    {
       let perpendicular_direction = edge_direction.perp();
       let new_direction = if perpendicular_direction.dot(agent.velocity) > 0.0 {
         perpendicular_direction
