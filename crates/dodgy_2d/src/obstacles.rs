@@ -497,26 +497,22 @@ fn get_line_for_agent_to_edge(
     && cutoff_edge_distance_squared <= right_shadow_distance_squared
   {
     let edge_direction = cutoff_vector.normalize();
-    let velocity_direction = (agent.velocity - left_cutoff).normalize();
-
-    // Check if the velocity is nearly perpendicular to the edge
-    if velocity_direction.dot(edge_direction).abs() < 0.1 {
-      // Choose a direction that's not parallel to the edge
+    // If the velocity is perpendicular to the edge, the constraint should be
+    // perpendicular to the edge as well.
+    if agent.velocity.dot(edge_direction).abs() < 0.11 {
       let perpendicular_direction = edge_direction.perp();
-      let new_direction =
-        if perpendicular_direction.dot(velocity_direction) > 0.0 {
-          perpendicular_direction
-        } else {
-          -perpendicular_direction
-        };
+      let new_direction = if perpendicular_direction.dot(agent.velocity) > 0.0 {
+        perpendicular_direction
+      } else {
+        -perpendicular_direction
+      };
 
       Some(Line {
         direction: new_direction,
         point: left_cutoff + edge_margin / time_horizon * edge_direction,
       })
     } else {
-      // Original behavior for non-perpendicular cases
-      let line_direction = -edge_direction;
+      let line_direction = -cutoff_vector.normalize();
       Some(Line {
         direction: line_direction,
         point: left_cutoff + edge_margin / time_horizon * line_direction.perp(),
